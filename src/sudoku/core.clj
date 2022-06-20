@@ -1,4 +1,6 @@
-(ns sudoku.core)
+(ns sudoku.core
+  "Terminology:
+  cell: A field in ")
 
 (defn take-until
   "Lazily take elements from coll until (and including) the first item that
@@ -35,7 +37,7 @@
   (fn [& args]
     (every? #(apply % args) preds)))
 
-(def ^{:doc "Square indices by row."} rows
+(def ^{:doc "Cell indices by row."} rows
   (mapv vec (partition 9 (range 81))))
 
 (defn transpose
@@ -49,86 +51,86 @@
   [matrix]
   (apply mapv vector matrix))
 
-(def ^{:doc "Square indices by column."} cols
+(def ^{:doc "Cell indices by column."} cols
   (transpose rows))
 
-(defn square
-  "The index of the square in the provided row and col."
+(defn cell
+  "The index of the cell in the provided row and col."
   [row col]
   (+ row (* col 9)))
 
-(def ^{:doc "Square indices of the top-left corners of the 9 Sudoku 3x3 boxes."} box-corners
+(def ^{:doc "Cell indices of the top-left corners of the 9 Sudoku 3x3 boxes."} box-corners
   (for [i (range 3)
         j (range 3)]
-    (square (* 3 j) (* 3 i))))
+    (cell (* 3 j) (* 3 i))))
 
-(def ^{:doc "Square indices of the top-left 3x3 box."} box-0
+(def ^{:doc "Cell indices of the top-left 3x3 box."} box-0
   [0 1 2 9 10 11 18 19 20])
 
-(def ^{:doc "Square indices by box."} boxes
+(def ^{:doc "Cell indices by box."} boxes
   (vec
     (for [offset box-corners]
       (mapv (partial + offset) box-0))))
 
-(defn x-by-square
-  "Return a map that allow to for instance look up what row square 7 is in."
+(defn x-by-cell
+  "Return a map that allow to look up what row cell 7 is in."
   [matrix]
   (reduce-kv
-    (fn [acc i squares]
-      (reduce #(assoc %1 %2 i) acc squares))
+    (fn [acc i cells]
+      (reduce #(assoc %1 %2 i) acc cells))
     {}
     matrix))
 
-(def ^{:doc "Row indices by square index."} rows-by-square
-  (x-by-square rows))
+(def ^{:doc "Row indices by cell index."} rows-by-cell
+  (x-by-cell rows))
 
-(def ^{:doc "Row indices by square index."} cols-by-square
-  (x-by-square cols))
+(def ^{:doc "Row indices by cell index."} cols-by-cell
+  (x-by-cell cols))
 
-(def ^{:doc "Box indices by square index."} boxes-by-square
-  (x-by-square boxes))
+(def ^{:doc "Box indices by cell index."} boxes-by-cell
+  (x-by-cell boxes))
 
 (defn calc-neighbours
-  "The set of square indices that are in the same row, column or box as square,
-  excluding square itself."
-  [square]
-  (-> (concat (rows (rows-by-square square))
-              (cols (cols-by-square square))
-              (boxes (boxes-by-square square)))
+  "The set of cell indices that are in the same row, column or box as cell,
+  excluding cell itself."
+  [cell]
+  (-> (concat (rows (rows-by-cell cell))
+              (cols (cols-by-cell cell))
+              (boxes (boxes-by-cell cell)))
       set
-      (disj square)))
+      (disj cell)))
 
-(def ^{:doc "Sets of neighbours for every square."} neighbours
+(def ^{:doc "Sets of neighbours for every cell."} neighbours
   (mapv calc-neighbours (range 81)))
 
 (defn eliminate-candidates
-  "When filling square, the sets of candidates for the row, column and box are
-  updated to excluding that number, and the candidate set for the square itself
+  "When filling cell, the sets of candidates for the row, column and box are
+  updated to excluding that number, and the candidate set for the cell itself
   is emptied."
-  [candidates square n]
+  [candidates cell n]
   (reduce
     #(update %1 %2 disj n)
-    (assoc candidates square #{})
-    (neighbours square)))
+    (assoc candidates cell #{})
+    (neighbours cell)))
 
 (defn fill
   "Given a game, containing a :sudoku and the sets of :candidates, fill in the
-  square at the given index with the provided number n, updating the candidates
+  cell at the given index with the provided number n, updating the candidates
   in the process."
-  [game square n]
+  [game cell n]
   (-> game
-      (update :sudoku assoc square n)
-      (update :candidates eliminate-candidates square n)))
+      (update :sudoku assoc cell n)
+      (update :candidates eliminate-candidates cell n)))
 
 (defn init-candidates
   "Calculate the candidates for the provided sudoku. Candidates are the vector,
-  indexed by square, of the numbers 1-9 not contained by a neighbouring square.
-  In other words, the candidates for square i are the numbers that could be filled
-  in square i without directly violating the row, column or box uniqueness constraint."
+  indexed by cell, of the numbers 1-9 not contained by a neighbouring cell.
+  In other words, the candidates for cell i are the numbers that could be filled
+  in cell i without directly violating the row, column or box uniqueness constraint."
   [sudoku]
-  (reduce-kv (fn [cands square n]
+  (reduce-kv (fn [cands cell n]
                (cond-> cands
-                       (pos-int? n) (eliminate-candidates square n)))
+                       (pos-int? n) (eliminate-candidates cell n)))
              (vec (repeat 81 #{1 2 3 4 5 6 7 8 9}))
              sudoku))
 
@@ -146,52 +148,52 @@
        (filter (partial pred game))))
 
 (defn cands
-  "Return the set of candidates the square."
-  [game square]
-  (get-in game [:candidates square]))
+  "Return the set of candidates the cell."
+  [game cell]
+  (get-in game [:candidates cell]))
 
 (defn filled?
-  "Is the square filled?"
-  [game square]
-  (pos-int? (get-in game [:sudoku square])))
+  "Is the cell filled?"
+  [game cell]
+  (pos-int? (get-in game [:sudoku cell])))
 
 (defn unfillable?
-  "Are there any candidates for the square?"
-  [game square]
-  (empty? (cands game square)))
+  "Are there any candidates for the cell?"
+  [game cell]
+  (empty? (cands game cell)))
 
 (defn single-candidate?
-  "Does the square have exactly one candidate?"
-  [game square]
-  (= 1 (count (cands game square))))
+  "Does the cell have exactly one candidate?"
+  [game cell]
+  (= 1 (count (cands game cell))))
 
 (defn fill-first-candidate
-  "Fill the square with an arbitrary choice among its candidates."
-  [game square]
-  (fill game square (first (cands game square))))
+  "Fill the cell with an arbitrary choice among its candidates."
+  [game cell]
+  (fill game cell (first (cands game cell))))
 
 (defn fill-first-candidate-of-first-single-candidate
-  "Fill a square, if any, that has exactly one candidate."
+  "Fill a cell, if any, that has exactly one candidate."
   [game]
   (let [first-single-candidate (first (indices-where single-candidate? game))]
     (cond-> game
             first-single-candidate (fill-first-candidate first-single-candidate))))
 
 (defn guesses
-  "Pick an arbitrary square and return a lazy sequence of the games that would
+  "Pick an arbitrary cell and return a lazy sequence of the games that would
   result from filling its respective candidates."
   [game]
-  (let [guessing-square (first (indices-where (complement filled?) game))]
-    (->> (cands game guessing-square)
-         (map (partial fill game guessing-square)))))
+  (let [guessing-cell (first (indices-where (complement filled?) game))]
+    (->> (cands game guessing-cell)
+         (map (partial fill game guessing-cell)))))
 
 (defn solved?
-  "Is every square filled? If so, the sudoku is solved assuming no illegal filling was made."
+  "Is every cell filled? If so, the sudoku is solved assuming no illegal filling was made."
   [game]
   (not (some #{0} (:sudoku game))))
 
 (defn unsolvable?
-  "Are there squares that are not filled, yet have no candidates? If so, the
+  "Are there cells that are not filled, yet have no candidates? If so, the
   sudoku cannot be solved."
   [game]
   (->> game
