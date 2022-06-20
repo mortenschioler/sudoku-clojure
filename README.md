@@ -4,6 +4,7 @@ Tiny spare-time project trying to make an idiomatic sudoku solver in Clojure.
 
 ## Usage
 
+```clojure
 (time (print-sudoku (solve-sudoku [0 9 0   1 4 0   0 0 0
                                    0 0 5   0 0 0   0 2 0
                                    0 3 0   0 0 0   0 6 0
@@ -15,6 +16,7 @@ Tiny spare-time project trying to make an idiomatic sudoku solver in Clojure.
                                    4 0 0   0 0 1   2 0 0
                                    0 8 0   4 0 0   0 0 3
                                    3 5 0   7 0 0   9 0 0])))
+```
 
 ## License
 
