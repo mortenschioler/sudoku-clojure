@@ -1,8 +1,12 @@
 (ns sudoku.core)
 
 (defn take-until
-  "Like take-while, but also includes the first element
-  that breaks the predicate.
+  "Lazily take elements from coll until (and including) the first item that
+  breaks the predicate pred.
+
+  Example:
+  (take-until odd? [2 2 1 2]
+  => (2 2 1)
 
   Source is based on clojure.core/take-while 1.10."
   [pred coll]
@@ -271,6 +275,8 @@
    4 0 0   0 0 1   2 0 0
    0 8 0   4 0 0   0 0 3
    3 5 0   7 0 0   9 0 0])
+
+
 
 (comment
   (time (print-sudoku (solve-sudoku hard-sudoku-1))))
