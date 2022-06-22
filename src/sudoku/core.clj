@@ -1,6 +1,10 @@
 (ns sudoku.core
   "Terminology:
-  cell: A field in ")
+    - Cell: One of the 81 fields in which numbers can be filled,
+      indexed from the top-left corner to the bottom-right corner.
+    - Row: Horizontal line of 9 cells, indexed top-to-bottom.
+    - Column: Vertical line of 9 cells, indexed left-to-right.
+    - Box: 3x3 square of cells, indexed top-left corner to bottom-right corner.")
 
 (defn take-until
   "Lazily take elements from coll until (and including) the first item that
@@ -59,7 +63,7 @@
   [row col]
   (+ row (* col 9)))
 
-(def ^{:doc "Cell indices of the top-left corners of the 9 Sudoku 3x3 boxes."} box-corners
+(def ^{:doc "Cell indices of the respective top-left corners of the 9 Sudoku 3x3 boxes."} box-corners
   (for [i (range 3)
         j (range 3)]
     (cell (* 3 j) (* 3 i))))
@@ -73,7 +77,7 @@
       (mapv (partial + offset) box-0))))
 
 (defn x-by-cell
-  "Return a map that allow to look up what row cell 7 is in."
+  "Inverts a structural mapping represented as a matrix (uniform vector of vectors), e.g. cell indices by [row-i col-i], and returns a flat vector of e.g. rows indiced by cell."
   [matrix]
   (reduce-kv
     (fn [acc i cells]
@@ -91,8 +95,8 @@
   (x-by-cell boxes))
 
 (defn calc-neighbours
-  "The set of cell indices that are in the same row, column or box as cell,
-  excluding cell itself."
+  "The set of cell indices that are in the same row, column or box as a cell,
+  excluding the cell itself."
   [cell]
   (-> (concat (rows (rows-by-cell cell))
               (cols (cols-by-cell cell))
