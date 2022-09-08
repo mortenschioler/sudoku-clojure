@@ -27,8 +27,9 @@
   or until the termination of xs.
 
   For example:
-    (fixpoint [1 2 3 3]) => [1 2 3]
-    (fixpoint [1 2 3]) [1 2 3]"
+    (fixpoint [1 2 3 3 3]) => (1 2 3)
+    (fixpoint [1 2 3 3 4]) => (1 2 3)
+    (fixpoint [1 2 3]) => (1 2 3)"
   [xs]
   (->> xs
        (partition 2 1 [:padding])
@@ -109,7 +110,7 @@
 
 (defn eliminate-candidates
   "When filling cell, the sets of candidates for the row, column and box are
-  updated to excluding that number, and the candidate set for the cell itself
+  updated to exclude that number, and the candidate set for the cell itself
   is emptied."
   [candidates cell n]
   (reduce
