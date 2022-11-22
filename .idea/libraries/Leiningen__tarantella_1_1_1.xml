@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: tarantella:1.1.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/tarantella/tarantella/1.1.1/tarantella-1.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
